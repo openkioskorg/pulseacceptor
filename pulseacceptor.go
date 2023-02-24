@@ -1,12 +1,15 @@
 package pulseacceptor
 
 import (
+	"errors"
 	"time"
 
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/conn/v3/gpio/gpioutil"
 )
+
+var PinNotFound = errors.New("Pin not found")
 
 type PulseAcceptorConfig struct {
 	// The pulse pin.
@@ -25,11 +28,19 @@ type PulseAcceptorDevice struct {
 }
 
 // Returns a new device with a denoised and debounced input pin.
-func Init(conf *PulseAcceptorConfig) (d *PulseAcceptorDevice, err error) {
+func Init(conf *PulseAcceptorConfig) (*PulseAcceptorDevice, error) {
 	pin := gpioreg.ByName(conf.Pin)
+	if pin == nil {
+		return nil, PinNotFound
+	}
+	d := &PulseAcceptorDevice{}
+	var err error
 	d.PinIO, err = gpioutil.Debounce(pin, conf.Denoise, conf.Debounce, gpio.BothEdges)
+	if err != nil {
+		return nil, err
+	}
 	d.Timeout = conf.Debounce
-	return
+	return d, nil
 }
 
 // Count pulses and return whenever the current wave of pulses ends.
@@ -42,7 +53,7 @@ func (d *PulseAcceptorDevice) Count() (pulses uint64) {
 				pulses++
 			}
 		}
-		return pulses
+		return
 	}
 }
 
