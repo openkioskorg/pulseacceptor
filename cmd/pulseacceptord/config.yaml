@@ -1,0 +1,5 @@
+device:
+  pin: 17
+  debounce: 100ms
+  denoise: 29ms
+redis: "127.0.0.1:1337"
