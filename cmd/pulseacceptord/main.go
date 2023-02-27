@@ -10,6 +10,7 @@ import (
 
 type daemonConfig struct {
 	Device *pa.PulseAcceptorConfig `yaml:"device"`
+	Values map[uint64]uint64 `yaml:"values"`
 	Redis string `yaml:"redis"`
 }
 
@@ -21,13 +22,11 @@ func parseConfig() (conf daemonConfig) {
 	if err := yaml.Unmarshal(file, &conf); err != nil {
 		log.Fatal("Failed to unmarshal yaml: ", err)
 	}
-	log.Println(conf.Device.Pin)
 	return
 }
 
 func main() {
 	conf := parseConfig()
-
 	if _, err := host.Init(); err != nil {
                 log.Fatal("Failed to load host drivers: ", err)
         }
@@ -36,7 +35,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to initialize pulse device: ", err)
 	}
-	defer pulseDevice.Deinit()
 
 	pulseChan := make(chan uint64)
 	go pulseDevice.CountWithHandler(pulseChan)
