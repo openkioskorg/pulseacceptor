@@ -3,11 +3,14 @@ device:
   debounce: 100ms
   denoise: 29ms
 
+redis:
+  type: tcp
+  host: "127.0.0.1:6379"
+
+# pulses: amount
 values:
   1: 10
   2: 20
   5: 50
   10: 100
   20: 200
-
-redis: "127.0.0.1:1337"
