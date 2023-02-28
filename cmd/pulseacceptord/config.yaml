@@ -1,16 +1,19 @@
 device:
   pin: 17
-  debounce: 100ms
+  debounce: 110ms
   denoise: 29ms
 
 redis:
-  type: tcp
-  host: "127.0.0.1:6379"
+  tag: pulseacceptord-1
+  network: tcp
+  address: 127.0.0.1:6379
+  db: 1
+  queue: acceptors
 
 # pulses: amount
 values:
-  1: 10
-  2: 20
-  5: 50
-  10: 100
-  20: 200
+  2: 10
+  4: 20
+  10: 50
+  20: 100
+  40: 200

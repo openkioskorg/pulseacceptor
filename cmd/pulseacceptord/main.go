@@ -31,7 +31,7 @@ func main() {
 	for {
 		select {
 		case p := <-pulseChan:
-			log.Printf("Received %d pulses.\n", p)
+			log.Printf("Received %d cents.\n", conf.Values[p])
 			j, _ := json.Marshal(pulseAcceptorEvent{Amount: conf.Values[p]})
 			if err := queue.PublishBytes(j); err != nil {
 				log.Println("Failed to publish event: ", err)
