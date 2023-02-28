@@ -35,6 +35,7 @@ func init() {
 	flag.IntVar(&conf.freq, "freq", 10, "Poll frequency in hertz")
 	flag.DurationVar(&conf.timeout, "timeout", 110*time.Millisecond,
 		"Timeout value for ignoring long pauses between different coin/bill inputs")
+	flag.Parse()
 }
 
 func main() {
