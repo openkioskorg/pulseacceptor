@@ -20,4 +20,11 @@ func commandHandler(msg *paho.Publish) {
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
 		log.Printf("Command could not be parsed (%s): %s", msg.Payload, err)
 	}
+	if cmd.Accept {
+		log.Println("Received start command, counting coin input")
+		accept = true
+	} else {
+		log.Println("Received stop command, ignoring coin input")
+		accept = false
+	}
 }

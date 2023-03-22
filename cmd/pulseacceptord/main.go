@@ -31,7 +31,6 @@ func main() {
 	//go pulseDevice.CountWithHandler(pulseChan)
 	go bsvalues(pulseChan)
 
-	accept = true
 	for {
 		select {
 		case p := <-pulseChan:
