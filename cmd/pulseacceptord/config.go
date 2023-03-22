@@ -11,7 +11,7 @@ import (
 type daemonConfig struct {
 	Device *pa.PulseAcceptorConfig `yaml:"device"`
 	Values map[uint64]uint64       `yaml:"values"`
-	Redis  redisConfig             `yaml:"redis"`
+	Mqtt   brokerConfig            `yaml:"mqtt"`
 }
 
 func parseConfig() (conf daemonConfig) {
