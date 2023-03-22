@@ -1,14 +1,7 @@
 device:
   pin: 17
-  debounce: 110ms
-  denoise: 29ms
-
-redis:
-  tag: pulseacceptord-1
-  network: tcp
-  address: 127.0.0.1:6379
-  db: 1
-  queue: acceptors
+  debounce: "110ms"
+  denoise: "29ms"
 
 # pulses: amount
 values:
@@ -17,3 +10,9 @@ values:
   10: 50
   20: 100
   40: 200
+
+mqtt:
+  brokers:
+    - "mqtt://127.0.0.1:1883"
+  topic: "pulseacceptord"
+  client_id: "pulseacceptord-1"

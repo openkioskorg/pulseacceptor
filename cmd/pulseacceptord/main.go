@@ -1,16 +1,14 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"log"
 
 	pa "gitlab.com/openkiosk/pulseacceptor"
 	"periph.io/x/host/v3"
 )
 
-type pulseAcceptorEvent struct {
-	Amount uint64 `json:"amount"`
-}
+var accept bool // true when accepting, false on idle
 
 func main() {
 	conf := parseConfig()
@@ -23,7 +21,10 @@ func main() {
 		log.Fatal("Failed to initialize pulse device: ", err)
 	}
 
-	queue := initQueue(conf.Redis)
+	broker, err := newBroker(conf.Mqtt)
+	if err != nil {
+		log.Fatal("Failed to connect to MQTT broker: ", err)
+	}
 
 	pulseChan := make(chan uint64)
 	go pulseDevice.CountWithHandler(pulseChan)
@@ -31,10 +32,12 @@ func main() {
 	for {
 		select {
 		case p := <-pulseChan:
-			log.Printf("Received %d cents.\n", conf.Values[p])
-			j, _ := json.Marshal(pulseAcceptorEvent{Amount: conf.Values[p]})
-			if err := queue.PublishBytes(j); err != nil {
-				log.Println("Failed to publish event: ", err)
+			amount := conf.Values[p]
+			if accept {
+				log.Printf("Received %d cents.\n", amount)
+				if err := broker.publishAmount(context.Background(), amount); err != nil {
+					log.Println("Failed to publish event: ", err)
+				}
 			}
 		}
 	}
