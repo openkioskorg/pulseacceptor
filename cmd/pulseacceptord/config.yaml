@@ -1,7 +1,7 @@
 device:
   pin: 17
-  debounce: 110ms
-  denoise: 29ms
+  debounce: "110ms"
+  denoise: "29ms"
 
 # pulses: amount
 values:
@@ -12,5 +12,7 @@ values:
   40: 200
 
 mqtt:
-  BrokerUrls:
+  brokers:
     - "mqtt://127.0.0.1:1883"
+  topic: "pulseacceptord"
+  client_id: "pulseacceptord-1"
