@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	//pa "gitlab.com/openkiosk/pulseacceptor"
+	pa "gitlab.com/openkiosk/pulseacceptor"
 	"periph.io/x/host/v3"
 )
 
@@ -16,11 +16,10 @@ func main() {
 		log.Fatal("Failed to load host drivers: ", err)
 	}
 
-	/*	pulseDevice, err := pa.Init(conf.Device)
-		if err != nil {
-			log.Fatal("Failed to initialize pulse device: ", err)
-		}
-	*/
+	pulseDevice, err := pa.Init(conf.Device)
+	if err != nil {
+		log.Fatal("Failed to initialize pulse device: ", err)
+	}
 
 	broker, err := newBroker(conf.Mqtt)
 	if err != nil {
@@ -28,8 +27,7 @@ func main() {
 	}
 
 	pulseChan := make(chan uint64)
-	//go pulseDevice.CountWithHandler(pulseChan)
-	go bsvalues(pulseChan)
+	go pulseDevice.CountWithHandler(pulseChan)
 
 	for {
 		select {
