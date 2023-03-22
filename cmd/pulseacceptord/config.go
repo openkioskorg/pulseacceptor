@@ -6,12 +6,13 @@ import (
 
 	pa "gitlab.com/openkiosk/pulseacceptor"
 	"gopkg.in/yaml.v3"
+	"github.com/eclipse/paho.golang/autopaho"
 )
 
 type daemonConfig struct {
 	Device *pa.PulseAcceptorConfig `yaml:"device"`
 	Values map[uint64]uint64       `yaml:"values"`
-	Redis  redisConfig             `yaml:"redis"`
+	Mqtt   autopaho.ClientConfig   `yaml:"mqtt"`
 }
 
 func parseConfig() (conf daemonConfig) {
@@ -22,5 +23,6 @@ func parseConfig() (conf daemonConfig) {
 	if err := yaml.Unmarshal(file, &conf); err != nil {
 		log.Fatal("Failed to unmarshal yaml: ", err)
 	}
+
 	return
 }
