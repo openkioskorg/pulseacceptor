@@ -10,7 +10,7 @@ import (
 
 type daemonConfig struct {
 	Device *pa.PulseAcceptorConfig `yaml:"device"`
-	Values map[uint64]uint64       `yaml:"values"`
+	Values map[int64]int64       `yaml:"values"`
 	Mqtt   brokerConfig            `yaml:"mqtt"`
 }
 

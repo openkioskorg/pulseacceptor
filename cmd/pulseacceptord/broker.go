@@ -8,6 +8,7 @@ import (
 
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
+	"gitlab.com/openkiosk/proto"
 )
 
 type brokerConfig struct {
@@ -67,14 +68,17 @@ func newBroker(conf brokerConfig) (*mqttBroker, error) {
 	return b, err
 }
 
-func (b *mqttBroker) publishAmount(ctx context.Context, amount uint64) error {
+func (b *mqttBroker) publishAmount(ctx context.Context, amount int64) error {
 	// AwaitConnection will return immediately if connection is up; adding this call stops publication whilst
 	// connection is unavailable.
 	if err := b.AwaitConnection(ctx); err != nil { // Should only happen when context is cancelled
 		return err
 	}
 
-	msg, err := json.Marshal(PulseacceptordEvent{Amount: amount})
+	msg, err := json.Marshal(proto.Event{
+		Event: "moneyin", 
+		Data: proto.EventMoneyinData{Amount: amount},
+	})
 	if err != nil {
 		return err
 	}
@@ -94,4 +98,20 @@ func (b *mqttBroker) publishAmount(ctx context.Context, amount uint64) error {
 		log.Printf("Sent message: %s\n", msg)
 	}(msg)
 	return nil
+}
+
+func commandHandler(msg *paho.Publish) {
+	var cmd proto.Cmd
+	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
+		log.Printf("Command could not be parsed (%s): %s", msg.Payload, err)
+	}
+	if cmd.Cmd == "start" {
+		log.Println("Received start command, counting coin input")
+		accept = true
+	} else if cmd.Cmd == "stop" {
+		log.Println("Received stop command, ignoring coin input")
+		accept = false
+	} else {
+		log.Println("Unknown command")
+	}
 }

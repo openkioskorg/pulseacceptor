@@ -26,7 +26,7 @@ func main() {
 		log.Fatal("Failed to connect to MQTT broker: ", err)
 	}
 
-	pulseChan := make(chan uint64)
+	pulseChan := make(chan int64)
 	go pulseDevice.CountWithHandler(pulseChan)
 
 	for {
