@@ -45,7 +45,7 @@ func Init(conf *PulseAcceptorConfig) (*PulseAcceptorDevice, error) {
 
 // Count pulses and return whenever the current wave of pulses ends.
 // The debounce duration is used as the timeout value.
-func (d *PulseAcceptorDevice) Count() (pulses uint64) {
+func (d *PulseAcceptorDevice) Count() (pulses int64) {
 	for {
 		pulses = 0
 		for d.WaitForEdge(d.Timeout) {
@@ -58,8 +58,8 @@ func (d *PulseAcceptorDevice) Count() (pulses uint64) {
 }
 
 // Count pulses and shove them down a channel when activity occurs.
-func (d *PulseAcceptorDevice) CountWithHandler(ch chan<- uint64) {
-	var pulses uint64
+func (d *PulseAcceptorDevice) CountWithHandler(ch chan<- int64) {
+	var pulses int64
 	for {
 		pulses = 0
 		for d.WaitForEdge(d.Timeout) {

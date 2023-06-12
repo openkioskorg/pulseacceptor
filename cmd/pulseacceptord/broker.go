@@ -75,9 +75,13 @@ func (b *mqttBroker) publishAmount(ctx context.Context, amount int64) error {
 		return err
 	}
 
+	dataBytes, err := json.Marshal(proto.EventMoneyinData{Amount: amount})
+	if err != nil {
+		return err
+	}
 	msg, err := json.Marshal(proto.Event{
 		Event: "moneyin", 
-		Data: proto.EventMoneyinData{Amount: amount},
+		Data: dataBytes,
 	})
 	if err != nil {
 		return err
