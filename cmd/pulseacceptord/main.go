@@ -19,15 +19,26 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	pa "gitlab.com/openkiosk/pulseacceptor"
+	"periph.io/x/conn/v3/gpio"
+	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/host/v3"
 )
 
 var accept bool // true when accepting, false on idle
 
+var enablePin gpio.PinIO
+
 func main() {
-	conf := parseConfig()
+	if len(os.Args) < 2 {
+		log.Fatal("Usage: ./pulseacceptord config.yaml")
+	}
+	conf = parseConfig(os.Args[1])
+
 	if _, err := host.Init(); err != nil {
 		log.Fatal("Failed to load host drivers: ", err)
 	}
@@ -37,6 +48,10 @@ func main() {
 		log.Fatal("Failed to initialize pulse device: ", err)
 	}
 
+	if conf.EnablePinControl {
+		enablePin = gpioreg.ByName(conf.EnablePin)
+	}
+
 	broker, err := newBroker(conf.Mqtt)
 	if err != nil {
 		log.Fatal("Failed to connect to MQTT broker: ", err)
@@ -44,6 +59,24 @@ func main() {
 
 	pulseChan := make(chan int64)
 	go pulseDevice.CountWithHandler(pulseChan)
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+
+		// At exit disable the pulse device if possible
+		if conf.EnablePinControl {
+			toWrite := gpio.High
+			if conf.EnabledWhenHigh {
+				toWrite = gpio.Low
+			}
+			if err := enablePin.Out(toWrite); err != nil {
+				log.Println("Failed to disable pulse device")
+			}
+		}
+		os.Exit(1)
+	}()
 
 	for {
 		select {

@@ -24,14 +24,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var conf daemonConfig
+
 type daemonConfig struct {
-	Device *pa.PulseAcceptorConfig `yaml:"device"`
-	Values map[int64]int64       `yaml:"values"`
-	Mqtt   brokerConfig            `yaml:"mqtt"`
+	Device           *pa.PulseAcceptorConfig `yaml:"device"`
+	Values           map[int64]int64         `yaml:"values"`
+	Mqtt             brokerConfig            `yaml:"mqtt"`
+	EnablePinControl bool                    `yaml:"enable_pin_control"`
+	EnablePin        string                  `yaml:"enable_pin"`
+	EnabledWhenHigh  bool                    `yaml:"enabled_when_high"`
 }
 
-func parseConfig() (conf daemonConfig) {
-	file, err := os.ReadFile("config.yaml")
+func parseConfig(filename string) (conf daemonConfig) {
+	file, err := os.ReadFile(filename)
 	if err != nil {
 		log.Fatal("Failed to read config: ", err)
 	}

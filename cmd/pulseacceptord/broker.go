@@ -25,6 +25,7 @@ import (
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"gitlab.com/openkiosk/proto"
+	"periph.io/x/conn/v3/gpio"
 )
 
 type brokerConfig struct {
@@ -96,8 +97,8 @@ func (b *mqttBroker) publishAmount(ctx context.Context, amount int64) error {
 		return err
 	}
 	msg, err := json.Marshal(proto.Event{
-		Event: "moneyin", 
-		Data: dataBytes,
+		Event: "moneyin",
+		Data:  dataBytes,
 	})
 	if err != nil {
 		return err
@@ -128,9 +129,27 @@ func commandHandler(msg *paho.Publish) {
 	if cmd.Cmd == "start" {
 		log.Println("Received start command, counting coin input")
 		accept = true
+		if enablePin != nil {
+			toWrite := gpio.Low
+			if conf.EnabledWhenHigh {
+				toWrite = gpio.High
+			}
+			if err := enablePin.Out(toWrite); err != nil {
+				log.Println("Failed to enable pulse device")
+			}
+		}
 	} else if cmd.Cmd == "stop" {
 		log.Println("Received stop command, ignoring coin input")
 		accept = false
+		if enablePin != nil {
+			toWrite := gpio.High
+			if conf.EnabledWhenHigh {
+				toWrite = gpio.Low
+			}
+			if err := enablePin.Out(toWrite); err != nil {
+				log.Println("Failed to disable pulse device")
+			}
+		}
 	} else {
 		log.Println("Unknown command")
 	}

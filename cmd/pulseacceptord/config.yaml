@@ -1,7 +1,15 @@
 device:
-  pin: 17
+  pulse_pin: 17
+  plus_one_mode: true
   debounce: "110ms"
   denoise: "29ms"
+
+# Some devices have "enable" pins to start/stop money input.
+enable_pin_control: true
+# Specify if enable_pin_control is enabled.
+enable_pin: 27
+# Is it enabled when the signal is high?
+enabled_when_high: false
 
 # pulses: amount
 values:

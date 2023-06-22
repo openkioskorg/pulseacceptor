@@ -39,30 +39,55 @@ var (
 )
 
 type args struct {
-	pin     string
-	freq    int
-	timeout time.Duration
+	pin              string
+	enablePin        string
+	enablePinControl bool
+	enabledWhenHigh  bool
+	freq             int
+	timeout          time.Duration
 }
 
 var conf args
 
 func init() {
 	flag.StringVar(&conf.pin, "pin", "1", "Pulse input pin")
+	flag.BoolVar(&conf.enablePinControl, "enablepincontrol", false, "true or false")
+	flag.BoolVar(&conf.enabledWhenHigh, "enabledwhenhigh", false, "State is enabled when high is outputted")
+	flag.StringVar(&conf.enablePin, "enablepin", "2", "Pulse enable pin")
 	flag.IntVar(&conf.freq, "freq", 10, "Poll frequency in hertz")
 	flag.DurationVar(&conf.timeout, "timeout", 110*time.Millisecond,
 		"Timeout value for ignoring long pauses between different coin/bill inputs")
 	flag.Parse()
 }
 
+var pEnable gpio.PinIO
+
 func main() {
 	if _, err := host.Init(); err != nil {
 		log.Fatal(err)
 	}
 
+	log.Printf("%v", conf)
+
 	p := gpioreg.ByName(conf.pin)
 	if p == nil {
 		log.Fatal("Unknown pin")
 	}
+
+	if conf.enablePinControl {
+		pEnable = gpioreg.ByName(conf.enablePin)
+		if p == nil {
+			log.Fatal("Unknown enable pin")
+		}
+		toWrite := gpio.Low
+		if conf.enabledWhenHigh {
+			toWrite = gpio.High
+		}
+		if err := pEnable.Out(toWrite); err != nil {
+			log.Fatal(err, "fuckk")
+		}
+	}
+
 	p = gpioutil.PollEdge(p, physic.Frequency(conf.freq)*physic.Hertz)
 	if err := p.In(gpio.PullUp, gpio.BothEdges); err != nil {
 		log.Fatal(err)
@@ -77,6 +102,16 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
+
+		if conf.enablePinControl {
+			toWrite := gpio.High
+			if conf.enabledWhenHigh {
+				toWrite = gpio.Low
+			}
+			if err := pEnable.Out(toWrite); err != nil {
+				log.Fatal(err, "Failed to disable pulse device")
+			}
+		}
 		fmt.Printf("...\n")
 		if totalPulsesNumber == 0 || totalPausesNumber == 0 {
 			os.Exit(1)
@@ -90,7 +125,7 @@ func main() {
 	duringPulse := false
 	for {
 		// Pause is over.
-		if p.Read() == gpio.High {
+		if p.Read() == gpio.Low {
 			if !duringPulse {
 				took := time.Since(eventStart)
 				if took > conf.timeout {

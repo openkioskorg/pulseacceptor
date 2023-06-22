@@ -29,11 +29,17 @@ var PinNotFound = errors.New("Pin not found")
 
 type PulseAcceptorConfig struct {
 	// The pulse pin.
-	Pin string
+	PulsePin string `yaml:"pulse_pin"`
+
 	// The duration of pause width. You might want to add up an error margin on top of this value.
 	Debounce time.Duration
+
 	// The duration of pulse width. You might want to add up an error margin on top of this value.
 	Denoise time.Duration
+
+	// Some devices don't send a pause beforehand, this causes counted pulses to be one less.
+	// If enabled there will be an extra pulse added to the count.
+	PlusOneMode bool `yaml:"plus_one_mode"`
 }
 
 type PulseAcceptorDevice struct {
@@ -41,15 +47,17 @@ type PulseAcceptorDevice struct {
 
 	// Marks end of coin or bill insertion.
 	Timeout time.Duration
+
+	plusOne bool
 }
 
 // Returns a new device with a denoised and debounced input pin.
 func Init(conf *PulseAcceptorConfig) (*PulseAcceptorDevice, error) {
-	pin := gpioreg.ByName(conf.Pin)
+	pin := gpioreg.ByName(conf.PulsePin)
 	if pin == nil {
 		return nil, PinNotFound
 	}
-	d := &PulseAcceptorDevice{}
+	d := &PulseAcceptorDevice{plusOne: conf.PlusOneMode}
 	var err error
 	d.PinIO, err = gpioutil.Debounce(pin, conf.Denoise, conf.Debounce, gpio.BothEdges)
 	if err != nil {
@@ -65,7 +73,7 @@ func (d *PulseAcceptorDevice) Count() (pulses int64) {
 	for {
 		pulses = 0
 		for d.WaitForEdge(d.Timeout) {
-			if d.Read() == gpio.High {
+			if d.Read() == gpio.Low {
 				pulses++
 			}
 		}
@@ -79,11 +87,15 @@ func (d *PulseAcceptorDevice) CountWithHandler(ch chan<- int64) {
 	for {
 		pulses = 0
 		for d.WaitForEdge(d.Timeout) {
-			if d.Read() == gpio.High {
+			if d.Read() == gpio.Low {
 				pulses++
+
 			}
 		}
 		if pulses != 0 {
+			if d.plusOne {
+				pulses++
+			}
 			ch <- pulses
 		}
 	}
