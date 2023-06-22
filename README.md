@@ -16,7 +16,7 @@ pulse-watcher -pin 17 -timeout 101ms
 ```
 
 ## Handling coins/cash with `pulseacceptord`
-`pulseacceptord` denoises and debounces the pulses to prevent noise. After it is done counting pulses for a single bill/coin, it sends the event in JSON format to Redis for queueing.
+`pulseacceptord` denoises and debounces the pulses to prevent noise. After it is done counting pulses for a single bill/coin, it sends the event in JSON format to MQTT for queueing.
 
 Change the values inside `config.yaml` before running.
 
