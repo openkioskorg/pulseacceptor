@@ -57,13 +57,18 @@ func Init(conf *PulseAcceptorConfig) (*PulseAcceptorDevice, error) {
 	if pin == nil {
 		return nil, PinNotFound
 	}
-	d := &PulseAcceptorDevice{plusOne: conf.PlusOneMode}
-	var err error
-	d.PinIO, err = gpioutil.Debounce(pin, conf.Denoise, conf.Debounce, gpio.BothEdges)
+	if err := pin.In(gpio.PullUp, gpio.BothEdges); err != nil {
+		return nil, err
+	}
+	debounced, err := gpioutil.Debounce(pin, conf.Denoise, conf.Debounce, gpio.BothEdges)
 	if err != nil {
 		return nil, err
 	}
-	d.Timeout = conf.Debounce
+
+	d := &PulseAcceptorDevice{PinIO: debounced,
+		plusOne: conf.PlusOneMode,
+		Timeout: conf.Debounce,
+	}
 	return d, nil
 }
 
