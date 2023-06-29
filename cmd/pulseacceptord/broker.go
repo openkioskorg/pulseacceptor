@@ -127,7 +127,7 @@ func commandHandler(msg *paho.Publish) {
 		log.Printf("Command could not be parsed (%s): %s", msg.Payload, err)
 	}
 	if cmd.Cmd == "start" {
-		log.Println("Received start command, counting coin input")
+		log.Println("Received start command")
 		accept = true
 		if enablePin != nil {
 			toWrite := gpio.Low
@@ -139,7 +139,7 @@ func commandHandler(msg *paho.Publish) {
 			}
 		}
 	} else if cmd.Cmd == "stop" {
-		log.Println("Received stop command, ignoring coin input")
+		log.Println("Received stop command")
 		accept = false
 		if enablePin != nil {
 			toWrite := gpio.High

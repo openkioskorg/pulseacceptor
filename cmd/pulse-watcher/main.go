@@ -67,8 +67,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("%v", conf)
-
 	p := gpioreg.ByName(conf.pin)
 	if p == nil {
 		log.Fatal("Unknown pin")
@@ -84,7 +82,7 @@ func main() {
 			toWrite = gpio.High
 		}
 		if err := pEnable.Out(toWrite); err != nil {
-			log.Fatal(err, "fuckk")
+			log.Fatal(err)
 		}
 	}
 
@@ -94,8 +92,8 @@ func main() {
 	}
 
 	var (
-		totalPulsesLength, totalPausesLength time.Duration
-		totalPulsesNumber, totalPausesNumber int64
+		totalPulsesLength, totalPausesLength                 time.Duration
+		pulsesThisTime, totalPulsesNumber, totalPausesNumber int64
 	)
 
 	c := make(chan os.Signal)
@@ -124,13 +122,19 @@ func main() {
 	eventStart := time.Now()
 	duringPulse := false
 	for {
+		if !duringPulse {
+			took := time.Since(eventStart)
+			if took > conf.timeout && pulsesThisTime != 0 {
+				fmt.Printf("%s--- Pulses: %d%s\n", yellow, pulsesThisTime, reset)
+				pulsesThisTime = 0
+			}
+		}
+
 		// Pause is over.
 		if p.Read() == gpio.Low {
 			if !duringPulse {
 				took := time.Since(eventStart)
-				if took > conf.timeout {
-					fmt.Printf("%s---%s\n", yellow, reset)
-				} else {
+				if took <= conf.timeout {
 					fmt.Printf("Pause width: %d ms (%d μs)\n",
 						took.Milliseconds(), took.Microseconds())
 					totalPausesLength += took
@@ -149,6 +153,7 @@ func main() {
 			took := time.Since(eventStart)
 			totalPulsesLength += took
 			totalPulsesNumber++
+			pulsesThisTime++
 
 			fmt.Printf("%sPulse width: %d ms (%d μs)%s\n", green,
 				took.Milliseconds(), took.Microseconds(), reset)

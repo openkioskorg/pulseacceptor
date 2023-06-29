@@ -83,7 +83,7 @@ func main() {
 		case p := <-pulseChan:
 			amount := conf.Values[p]
 			if accept {
-				log.Printf("Received %d cents.\n", amount)
+				log.Printf("Received amount: %d\n", amount)
 				if err := broker.publishAmount(context.Background(), amount); err != nil {
 					log.Println("Failed to publish event: ", err)
 				}

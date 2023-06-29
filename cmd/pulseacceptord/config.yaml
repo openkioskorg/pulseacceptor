@@ -1,8 +1,8 @@
 device:
   pulse_pin: 17
-  plus_one_mode: true
   debounce: "110ms"
   denoise: "29ms"
+  timeout: "110ms"
 
 # Some devices have "enable" pins to start/stop money input.
 enable_pin_control: true
